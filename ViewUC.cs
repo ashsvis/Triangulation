@@ -162,11 +162,16 @@ namespace Triangulation
 
         private void tsmiAddVertex_Click(object sender, EventArgs e)
         {
-            vertexCount++;
-            vertexes.Add(new Vertex(PointToClient(MousePosition)));
-            //vertexes.Add(new Vertex(random.Next(side, ClientSize.Width - side), random.Next(side, ClientSize.Height - side)));
-            BuildEdges();
-            Invalidate();
+            var point = PointToClient(contextMenuStrip1.Bounds.Location);
+            var rect = ClientRectangle;
+            rect.Inflate(-side, -side);
+            if (rect.Contains(point))
+            {
+                vertexes.Add(new Vertex(point));
+                vertexCount++;
+                BuildEdges();
+                Invalidate();
+            }
         }
 
         private void tsmiRemoveVertex_Click(object sender, EventArgs e)
