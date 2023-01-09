@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 
 namespace Triangulation
 {
@@ -42,6 +44,14 @@ namespace Triangulation
             var rect = new Rectangle(Location, new Size(side, side));
             rect.Offset(-rect.Width / 2, -rect.Height / 2);
             return rect;
+        }
+    }
+
+    public class Vertexes : List<Vertex>
+    {
+        public IEnumerable<Vertex> SortedByX()
+        {
+            return this.OrderBy(item => item.X);
         }
     }
 }

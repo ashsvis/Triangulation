@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 
 namespace Triangulation
 {
@@ -17,11 +12,9 @@ namespace Triangulation
     {
         private readonly int side = 6;
         private readonly Random random = new Random();
-        private readonly List<Vertex> vertexes = new List<Vertex>();
-        private readonly List<Vertex> sortedVertexes = new List<Vertex>();
-        private readonly List<Edge> edges = new List<Edge>();
+        private readonly Vertexes vertexes = new Vertexes();
+        private readonly Edges edges = new Edges();
         private Point lastPoint = new Point();
-        private Point lastPressed = new Point();
         private int lastVertexIndex = -1;
         private bool buttonPressed = false;
         private int vertexCount;
@@ -55,9 +48,13 @@ namespace Triangulation
             BuildEdges();
         }
 
+        /// <summary>
+        /// Построение рёбер
+        /// </summary>
         private void BuildEdges()
         {
-            sortedVertexes.Clear();
+            var sortedVertexes = new Vertexes();
+            // сортируем вершины по абсциссе
             foreach (var vertex in vertexes.OrderBy(item => item.X))
                 sortedVertexes.Add(vertex);
             // собираем рёбра
@@ -72,16 +69,21 @@ namespace Triangulation
             }
         }
 
+        /// <summary>
+        /// Метод прорисовки поверхности компонента
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnPaint(PaintEventArgs e)
         {
             var gr = e.Graphics;
             gr.SmoothingMode = SmoothingMode.HighQuality;
-
+            // рисуем рёбра
             foreach (var edge in edges)
                 gr.DrawLine(Pens.Blue, (float)edge.V1.X, (float)edge.V1.Y, (float)edge.V2.X, (float)edge.V2.Y);
             var n = 1;
             foreach (var pt in vertexes)
             {
+                // рисуем номера вершин
                 var text = n++.ToString();
                 var size = gr.MeasureString(text, Font);
                 var rect = new Rectangle(Point.Ceiling(pt.Location), Size.Ceiling(size));
@@ -91,6 +93,7 @@ namespace Triangulation
                 }
                 gr.DrawString(text, Font, SystemBrushes.WindowText, rect);
             }
+            // рисуем вершины
             foreach (var vertex in vertexes)
                 DrawVertex(e.Graphics, vertex);
 
@@ -108,15 +111,19 @@ namespace Triangulation
             graphics.DrawEllipse(SystemPens.WindowText, rect);
         }
 
+        /// <summary>
+        /// Метод обработки нажатия мыши на поверхности компонента
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
             if (e.Button == MouseButtons.Left)
             {
+                // ищем вершину с координатами рядом с точкой нажатия
                 var vertex = vertexes.Find(v => v.GetVertexRect(side).Contains(e.Location));
                 lastPoint = vertex != null ? vertex.Location : Point.Empty;
                 lastVertexIndex = lastPoint.IsEmpty ? -1 : vertexes.FindIndex(v => v.Location.Equals(lastPoint));
-                lastPressed = e.Location;
                 buttonPressed = e.Button == MouseButtons.Left;
             }
         }
@@ -124,11 +131,12 @@ namespace Triangulation
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (vertexes.Count > 2)
+            if (vertexes.Count > 0)
             {
                 Cursor = vertexes.Any(vertex => vertex.GetVertexRect(side).Contains(e.Location)) ? Cursors.Hand : Cursors.Default;
                 if (buttonPressed)
                 {
+                    // контроль границ для перемещения вершин
                     var rect = ClientRectangle;
                     rect.Inflate(-side, -side);
                     if (!lastPoint.IsEmpty && lastVertexIndex >= 0 && lastVertexIndex < vertexes.Count && rect.Contains(e.Location))
@@ -142,6 +150,10 @@ namespace Triangulation
             }
         }
 
+        /// <summary>
+        /// Метод обработки отпускания кнопи мыши
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnMouseUp(MouseEventArgs e)
         {
             buttonPressed = false;
@@ -154,6 +166,11 @@ namespace Triangulation
             size = Size;
         }
 
+        /// <summary>
+        /// Метод обработки изменения размеров компонента
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ViewUC_Resize(object sender, EventArgs e)
         {
             var newSize = Size;
@@ -169,13 +186,26 @@ namespace Triangulation
             Invalidate();
         }
 
+        /// <summary>
+        /// При показе контекстного меню прячем или показываем пункты меню
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
             Cursor = Cursors.Default;
-            tsmiRemoveVertex.Visible = vertexes.Any(vertex => vertex.GetVertexRect(side).Contains(PointToClient(MousePosition)));
-            tsmiAddVertex.Visible = !vertexes.Any(vertex => vertex.GetVertexRect(side).Contains(PointToClient(MousePosition)));
+            var pointAboveVertex = vertexes.Any(vertex => vertex.GetVertexRect(side).Contains(PointToClient(MousePosition)));
+            // пункт удаления вершины будет показан только над вершиной
+            tsmiRemoveVertex.Visible = pointAboveVertex;
+            // пункт добавления вершины будет показан вне вершины
+            tsmiAddVertex.Visible = !pointAboveVertex;
         }
 
+        /// <summary>
+        /// Добавление новой вершины в список вершин
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tsmiAddVertex_Click(object sender, EventArgs e)
         {
             var point = PointToClient(contextMenu.Bounds.Location);
@@ -190,6 +220,11 @@ namespace Triangulation
             }
         }
 
+        /// <summary>
+        /// Удаление выбранной вершины
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tsmiRemoveVertex_Click(object sender, EventArgs e)
         {
             var point = PointToClient(contextMenu.Bounds.Location);

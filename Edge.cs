@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Triangulation
 {
@@ -7,17 +8,21 @@ namespace Triangulation
         public Vertex V1 { get; set; }
         public Vertex V2 { get; set; }
 
-        public int Length
+        public double Length
         {
             get
             {
-                return (int)Math.Round(Math.Sqrt((V2.X - V1.X) * (V2.X - V1.X) + (V2.Y - V1.Y) * (V2.Y - V1.Y)));
+                return Math.Round(Math.Sqrt((V2.X - V1.X) * (V2.X - V1.X) + (V2.Y - V1.Y) * (V2.Y - V1.Y)));
             }
         }
 
         public override string ToString()
         {
-            return $"{Length}";
+            return $"{(int)Math.Round(Length)}";
         }
+    }
+
+    public class Edges : List<Edge>
+    { 
     }
 }
