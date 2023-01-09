@@ -176,6 +176,16 @@ namespace Triangulation
 
         private void tsmiRemoveVertex_Click(object sender, EventArgs e)
         {
+            var point = PointToClient(contextMenuStrip1.Bounds.Location);
+            var vertex = vertexes.FirstOrDefault(v => v.GetVertexRect(side).Contains(point));
+            if (vertex != null)
+            {
+                // удаляем одну вершину
+                vertexes.Remove(vertex);
+                vertexCount--;
+                BuildEdges();
+                Invalidate();
+            }
 
         }
     }
