@@ -1,7 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Reflection;
-using System.Security.Policy;
+﻿using System.Drawing;
 
 namespace Triangulation
 {
@@ -23,15 +20,15 @@ namespace Triangulation
             Y = point.Y;
         }
 
-        public int X { get; set; }
+        public double X { get; set; }
      
-        public int Y { get; set; }
+        public double Y { get; set; }
 
         public Point Location
         {
             get 
             { 
-                return new Point(X, Y); 
+                return new Point((int)X, (int)Y); 
             }
             set 
             { 

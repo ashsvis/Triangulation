@@ -78,13 +78,13 @@ namespace Triangulation
             gr.SmoothingMode = SmoothingMode.HighQuality;
 
             foreach (var edge in edges)
-                gr.DrawLine(Pens.Blue, edge.V1.X, edge.V1.Y, edge.V2.X, edge.V2.Y);
+                gr.DrawLine(Pens.Blue, (float)edge.V1.X, (float)edge.V1.Y, (float)edge.V2.X, (float)edge.V2.Y);
             var n = 1;
             foreach (var pt in vertexes)
             {
                 var text = n++.ToString();
                 var size = gr.MeasureString(text, Font);
-                var rect = new Rectangle(pt.Location, Size.Ceiling(size));
+                var rect = new Rectangle(Point.Ceiling(pt.Location), Size.Ceiling(size));
                 using (var brush = new SolidBrush(Color.FromArgb(240, BackColor)))
                 {
                     gr.FillRectangle(brush, rect);
@@ -147,9 +147,25 @@ namespace Triangulation
             buttonPressed = false;
         }
 
+        private Size size;
+
+        private void ViewUC_Load(object sender, EventArgs e)
+        {
+            size = Size;
+        }
+
         private void ViewUC_Resize(object sender, EventArgs e)
         {
-            GenerateVertexList(vertexCount);
+            var newSize = Size;
+            if (size.IsEmpty) return;
+            var kX = newSize.Width / (double)size.Width;
+            var kY = newSize.Height / (double)size.Height;
+            foreach (var vertex in vertexes)
+            {
+                vertex.X *= kX;
+                vertex.Y *= kY;
+            }
+            size = newSize;
             Invalidate();
         }
 
@@ -162,7 +178,7 @@ namespace Triangulation
 
         private void tsmiAddVertex_Click(object sender, EventArgs e)
         {
-            var point = PointToClient(contextMenuStrip1.Bounds.Location);
+            var point = PointToClient(contextMenu.Bounds.Location);
             var rect = ClientRectangle;
             rect.Inflate(-side, -side);
             if (rect.Contains(point))
@@ -176,7 +192,7 @@ namespace Triangulation
 
         private void tsmiRemoveVertex_Click(object sender, EventArgs e)
         {
-            var point = PointToClient(contextMenuStrip1.Bounds.Location);
+            var point = PointToClient(contextMenu.Bounds.Location);
             var vertex = vertexes.FirstOrDefault(v => v.GetVertexRect(side).Contains(point));
             if (vertex != null)
             {
@@ -188,5 +204,6 @@ namespace Triangulation
             }
 
         }
+
     }
 }

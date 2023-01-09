@@ -29,20 +29,20 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tsmiAddVertex = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiRemoveVertex = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenuStrip1.SuspendLayout();
+            this.contextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
-            // contextMenuStrip1
+            // contextMenu
             // 
-            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsmiAddVertex,
             this.tsmiRemoveVertex});
-            this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 70);
-            this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
+            this.contextMenu.Name = "contextMenuStrip1";
+            this.contextMenu.Size = new System.Drawing.Size(180, 48);
+            this.contextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // tsmiAddVertex
             // 
@@ -62,18 +62,20 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ContextMenuStrip = this.contextMenuStrip1;
+            this.ContextMenuStrip = this.contextMenu;
+            this.MinimumSize = new System.Drawing.Size(200, 100);
             this.Name = "ViewUC";
-            this.Size = new System.Drawing.Size(506, 378);
+            this.Size = new System.Drawing.Size(405, 216);
+            this.Load += new System.EventHandler(this.ViewUC_Load);
             this.Resize += new System.EventHandler(this.ViewUC_Resize);
-            this.contextMenuStrip1.ResumeLayout(false);
+            this.contextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ContextMenuStrip contextMenu;
         private System.Windows.Forms.ToolStripMenuItem tsmiAddVertex;
         private System.Windows.Forms.ToolStripMenuItem tsmiRemoveVertex;
     }
