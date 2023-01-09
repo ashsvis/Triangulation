@@ -41,7 +41,7 @@
             this.tsmiAddVertex,
             this.tsmiRemoveVertex});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(180, 48);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 70);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // tsmiAddVertex
@@ -49,12 +49,14 @@
             this.tsmiAddVertex.Name = "tsmiAddVertex";
             this.tsmiAddVertex.Size = new System.Drawing.Size(180, 22);
             this.tsmiAddVertex.Text = "Добавить вершину";
+            this.tsmiAddVertex.Click += new System.EventHandler(this.tsmiAddVertex_Click);
             // 
             // tsmiRemoveVertex
             // 
             this.tsmiRemoveVertex.Name = "tsmiRemoveVertex";
             this.tsmiRemoveVertex.Size = new System.Drawing.Size(180, 22);
             this.tsmiRemoveVertex.Text = "Удалить вершину";
+            this.tsmiRemoveVertex.Click += new System.EventHandler(this.tsmiRemoveVertex_Click);
             // 
             // ViewUC
             // 

@@ -159,5 +159,19 @@ namespace Triangulation
             tsmiRemoveVertex.Visible = vertexes.Any(vertex => vertex.GetVertexRect(side).Contains(PointToClient(MousePosition)));
             tsmiAddVertex.Visible = !vertexes.Any(vertex => vertex.GetVertexRect(side).Contains(PointToClient(MousePosition)));
         }
+
+        private void tsmiAddVertex_Click(object sender, EventArgs e)
+        {
+            vertexCount++;
+            vertexes.Add(new Vertex(PointToClient(MousePosition)));
+            //vertexes.Add(new Vertex(random.Next(side, ClientSize.Width - side), random.Next(side, ClientSize.Height - side)));
+            BuildEdges();
+            Invalidate();
+        }
+
+        private void tsmiRemoveVertex_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

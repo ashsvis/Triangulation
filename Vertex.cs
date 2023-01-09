@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Reflection;
 using System.Security.Policy;
 
 namespace Triangulation
@@ -14,6 +15,12 @@ namespace Triangulation
         {
             X = x;
             Y = y;
+        }
+
+        public Vertex(Point point)
+        {
+            X = point.X;
+            Y = point.Y;
         }
 
         public int X { get; set; }
