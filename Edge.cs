@@ -9,6 +9,8 @@ namespace Triangulation
         public Vertex V1 { get; set; }
         public Vertex V2 { get; set; }
 
+        public bool Goal { get; set; }
+
         public double Length
         {
             get

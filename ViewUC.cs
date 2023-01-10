@@ -13,6 +13,7 @@ namespace Triangulation
         private readonly Random random = new Random();
         private readonly Vertices vertices = new Vertices();
         private readonly Edges edges = new Edges();
+
         private Point lastPoint = new Point();
         private int lastVertexIndex = -1;
         private bool buttonPressed = false;
@@ -43,10 +44,69 @@ namespace Triangulation
             {
                 for (var j = i + 1; j < sortedVertices.Count; j++)
                 {
-                    var edge = new Edge() { V1 = sortedVertices[i], V2 = sortedVertices[j] };
+                    var edge = new Edge() { V1 = sortedVertices[i], V2 = sortedVertices[j], Goal = false };
                     edges.Add(edge);
                 }
             }
+        }
+
+        /// <summary>
+        /// Жадная триангуляция
+        /// </summary>
+        private void Triangulate()
+        {
+            // сортируем рёбра по длине
+            var sortedEdges = new Edges();
+            foreach (var edge in edges.OrderBy(item => item.Length)) sortedEdges.Add(edge);
+            if (sortedEdges.Count == 0) return;
+            sortedEdges[0].Goal = true;
+            foreach (var edge in sortedEdges.Skip(1))
+            {
+                var crossingAdges = sortedEdges.Where(item => item.Goal).Where(item => AreCrossing(item, edge));
+                if (crossingAdges.Count() > 0) continue;
+                edge.Goal = true;
+            }
+        }
+
+        /// <summary>
+        /// векторное произведение
+        /// </summary>
+        /// <param name="ax"></param>
+        /// <param name="ay"></param>
+        /// <param name="bx"></param>
+        /// <param name="by"></param>
+        /// <returns></returns>
+        private double VectorMult(double ax, double ay, double bx, double by)
+        {
+            return ax * by - bx * ay;
+        }
+
+        /// <summary>
+        /// проверка пересечения
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <returns></returns>
+        private bool AreCrossing(Vertex p1, Vertex p2, Vertex p3, Vertex p4)
+        {
+            var v1 = VectorMult(p4.X - p3.X, p4.Y - p3.Y, p1.X - p3.X, p1.Y - p3.Y);
+            var v2 = VectorMult(p4.X - p3.X, p4.Y - p3.Y, p2.X - p3.X, p2.Y - p3.Y);
+            var v3 = VectorMult(p2.X - p1.X, p2.Y - p1.Y, p3.X - p1.X, p3.Y - p1.Y);
+            var v4 = VectorMult(p2.X - p1.X, p2.Y - p1.Y, p4.X - p1.X, p4.Y - p1.Y);
+            return (v1 * v2) < 0 && (v3 * v4) < 0;
+        }
+
+        /// <summary>
+        /// проверка пересечения
+        /// </summary>
+        /// <param name="e1"></param>
+        /// <param name="e2"></param>
+        /// <returns></returns>
+        private bool AreCrossing(Edge e1, Edge e2)
+        {
+            return AreCrossing(e1.V1, e1.V2, e2.V1, e2.V2);
         }
 
         /// <summary>
@@ -63,8 +123,17 @@ namespace Triangulation
         private void PaintContent(Graphics gr)
         {
             // рисуем рёбра
-            foreach (var edge in edges)
-                gr.DrawLine(Pens.Blue, (float)edge.V1.X, (float)edge.V1.Y, (float)edge.V2.X, (float)edge.V2.Y);
+            using (var pen = new Pen(Color.FromArgb(50, Color.Blue), 3f))
+            {
+                foreach (var edge in edges.Where(item => !item.Goal))
+                    gr.DrawLine(pen, (float)edge.V1.X, (float)edge.V1.Y, (float)edge.V2.X, (float)edge.V2.Y);
+            }
+            // рисуем целевые рёбра
+            using (var pen = new Pen(Color.Red, 3f))
+            {
+                foreach (var edge in edges.Where(item => item.Goal))
+                    gr.DrawLine(pen, (float)edge.V1.X, (float)edge.V1.Y, (float)edge.V2.X, (float)edge.V2.Y);
+            }
             var n = 1;
             foreach (var pt in vertices)
             {
@@ -129,7 +198,6 @@ namespace Triangulation
                     {
                         // перемещаем одну вершину
                         vertices[lastVertexIndex].Location = e.Location;
-                        BuildEdges();
                         contentChanged = true;
                         Invalidate();
                     }
@@ -146,6 +214,9 @@ namespace Triangulation
             buttonPressed = false;
             if (contentChanged)
             {
+                BuildEdges();
+                Triangulate();
+                Invalidate();
                 ContentUnsaved = true;
                 ContentChanged?.Invoke(this, new EventArgs());
                 contentChanged = false;
@@ -214,6 +285,7 @@ namespace Triangulation
             {
                 vertices.Add(new Vertex(point));
                 BuildEdges();
+                Triangulate();
                 Invalidate();
                 ContentUnsaved = true;
                 ContentChanged?.Invoke(this, new EventArgs());
@@ -234,6 +306,7 @@ namespace Triangulation
                 // удаляем одну вершину
                 vertices.Remove(vertex);
                 BuildEdges();
+                Triangulate();
                 Invalidate();
                 ContentUnsaved = true;
                 ContentChanged?.Invoke(this, new EventArgs());
@@ -253,6 +326,7 @@ namespace Triangulation
                 vertices.Add(vertex);
             }
             BuildEdges();
+            Triangulate();
             ContentUnsaved = true;
             ContentChanged?.Invoke(this, new EventArgs());
         }
@@ -277,6 +351,7 @@ namespace Triangulation
                 {
                     vertices.AddRange(SaverLoader.LoadVerticesFromFile(fileName, ClientSize));
                     BuildEdges();
+                    Triangulate();
                 }
                 catch (Exception)
                 {
