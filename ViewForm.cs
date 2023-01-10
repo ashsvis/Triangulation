@@ -30,7 +30,10 @@ namespace Triangulation
             Properties.Settings.Default.Reload();
             if (Location.IsEmpty)
                 CenterToScreen();
-            viewGraph.Clear();
+            if (File.Exists(fileName))
+                viewGraph.LoadVertices(fileName);
+            else
+                viewGraph.Clear();
             viewGraph.Invalidate();
             tsmiSave.Enabled = viewGraph.ContentUnsaved;
             tsbSave.Enabled = viewGraph.ContentUnsaved;

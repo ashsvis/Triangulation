@@ -276,7 +276,6 @@ namespace Triangulation
                 try
                 {
                     vertices.AddRange(SaverLoader.LoadVerticesFromFile(fileName, ClientSize));
-                    ResizeContent();
                     BuildEdges();
                 }
                 catch (Exception)
