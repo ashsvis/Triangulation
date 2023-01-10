@@ -19,12 +19,12 @@ namespace Triangulation
 
         private void ViewForm_Load(object sender, EventArgs e)
         {
-            viewUC1.VertexCount = 7;
+            viewGraph.VertexCount = 7;
         }
 
         private void ViewForm_SizeChanged(object sender, EventArgs e)
         {
-            viewUC1.Invalidate();
+            viewGraph.Invalidate();
         }
     }
 }
