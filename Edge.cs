@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Triangulation
 {
+    [Serializable]
     public class Edge
     {
         public Vertex V1 { get; set; }
@@ -22,6 +23,7 @@ namespace Triangulation
         }
     }
 
+    [Serializable]
     public class Edges : List<Edge>
     { 
     }

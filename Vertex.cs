@@ -1,16 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
 namespace Triangulation
 {
+    [Serializable]
     public class Vertex
     {
         public Vertex()
         {
         }
 
-        public Vertex(int x, int y)
+        public Vertex(double x, double y)
         {
             X = x;
             Y = y;
@@ -47,11 +49,33 @@ namespace Triangulation
         }
     }
 
-    public class Vertexes : List<Vertex>
+    [Serializable]
+    public class Vertices : List<Vertex>
     {
-        public IEnumerable<Vertex> SortedByX()
+        /// <summary>
+        /// Возвращаем вершины с нормализованными координатами
+        /// </summary>
+        /// <param name="clientSize"></param>
+        /// <returns></returns>
+        public Vertices NormalizeXY(Size clientSize) 
         {
-            return this.OrderBy(item => item.X);
+            var vertices = new Vertices();
+            foreach (var vertex in this)
+                vertices.Add(new Vertex(vertex.X / clientSize.Width, vertex.Y / clientSize.Height));
+            return vertices;
+        }
+
+        /// <summary>
+        /// Растягиваем положение вершин из нормализованного списка в размер клиента
+        /// </summary>
+        /// <param name="vertices"></param>
+        /// <param name="size"></param>
+        public static Vertices UnNormalize(Vertices vertices, Size size)
+        {
+            var verts = new Vertices();
+            foreach (var vertex in vertices)
+                verts.Add(new Vertex(vertex.X * size.Width, vertex.Y * size.Height));
+            return verts;
         }
     }
 }

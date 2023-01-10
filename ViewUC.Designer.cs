@@ -67,7 +67,6 @@
             this.Name = "ViewUC";
             this.Size = new System.Drawing.Size(405, 216);
             this.Load += new System.EventHandler(this.ViewUC_Load);
-            this.Resize += new System.EventHandler(this.ViewUC_Resize);
             this.contextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 

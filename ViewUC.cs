@@ -10,42 +10,22 @@ namespace Triangulation
 {
     public partial class ViewUC : UserControl
     {
-        private readonly int side = 6;
         private readonly Random random = new Random();
-        private readonly Vertexes vertexes = new Vertexes();
+        private readonly Vertices vertices = new Vertices();
         private readonly Edges edges = new Edges();
         private Point lastPoint = new Point();
         private int lastVertexIndex = -1;
         private bool buttonPressed = false;
-        private int vertexCount;
 
-        public int VertexCount 
-        { 
-            get => vertexCount;
-            set
-            {
-                vertexCount = value;
-                GenerateVertexList(vertexCount);
-            }
-        }
+        private bool contentChanged = false;
+        public event EventHandler<EventArgs> ContentChanged;
+
+        public int Side { get; set; } = 6;
 
         public ViewUC()
         {
             InitializeComponent();
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
-
-            GenerateVertexList(vertexCount);
-        }
-
-        private void GenerateVertexList(int count = 0)
-        {
-            vertexes.Clear();
-            foreach (var vertex in Enumerable.Range(1, count).Select(n =>
-                     new Vertex(random.Next(side, ClientSize.Width - side), random.Next(side, ClientSize.Height - side))))
-            {
-                vertexes.Add(vertex);
-            }
-            BuildEdges();
         }
 
         /// <summary>
@@ -53,17 +33,17 @@ namespace Triangulation
         /// </summary>
         private void BuildEdges()
         {
-            var sortedVertexes = new Vertexes();
+            var sortedVertices = new Vertices();
             // сортируем вершины по абсциссе
-            foreach (var vertex in vertexes.OrderBy(item => item.X))
-                sortedVertexes.Add(vertex);
+            foreach (var vertex in vertices.OrderBy(item => item.X))
+                sortedVertices.Add(vertex);
             // собираем рёбра
             edges.Clear();
-            for (var i = 0; i < sortedVertexes.Count - 1; i++)
+            for (var i = 0; i < sortedVertices.Count - 1; i++)
             {
-                for (var j = i + 1; j < sortedVertexes.Count; j++)
+                for (var j = i + 1; j < sortedVertices.Count; j++)
                 {
-                    var edge = new Edge() { V1 = sortedVertexes[i], V2 = sortedVertexes[j] };
+                    var edge = new Edge() { V1 = sortedVertices[i], V2 = sortedVertices[j] };
                     edges.Add(edge);
                 }
             }
@@ -77,26 +57,26 @@ namespace Triangulation
         {
             var gr = e.Graphics;
             gr.SmoothingMode = SmoothingMode.HighQuality;
+            PaintContent(gr);
+        }
+
+        private void PaintContent(Graphics gr)
+        {
             // рисуем рёбра
             foreach (var edge in edges)
                 gr.DrawLine(Pens.Blue, (float)edge.V1.X, (float)edge.V1.Y, (float)edge.V2.X, (float)edge.V2.Y);
             var n = 1;
-            foreach (var pt in vertexes)
+            foreach (var pt in vertices)
             {
                 // рисуем номера вершин
                 var text = n++.ToString();
                 var size = gr.MeasureString(text, Font);
                 var rect = new Rectangle(Point.Ceiling(pt.Location), Size.Ceiling(size));
-                using (var brush = new SolidBrush(Color.FromArgb(240, BackColor)))
-                {
-                    gr.FillRectangle(brush, rect);
-                }
-                gr.DrawString(text, Font, SystemBrushes.WindowText, rect);
+                gr.DrawString(text, Font, Brushes.White, rect);
             }
             // рисуем вершины
-            foreach (var vertex in vertexes)
-                DrawVertex(e.Graphics, vertex);
-
+            foreach (var vertex in vertices)
+                DrawVertex(gr, vertex);
         }
 
         /// <summary>
@@ -106,7 +86,7 @@ namespace Triangulation
         /// <param name="pt">точка вершины</param>
         private void DrawVertex(Graphics graphics, Vertex vertex)
         {
-            Rectangle rect = vertex.GetVertexRect(side);
+            Rectangle rect = vertex.GetVertexRect(Side);
             graphics.FillEllipse(SystemBrushes.Window, rect);
             graphics.DrawEllipse(SystemPens.WindowText, rect);
         }
@@ -121,29 +101,36 @@ namespace Triangulation
             if (e.Button == MouseButtons.Left)
             {
                 // ищем вершину с координатами рядом с точкой нажатия
-                var vertex = vertexes.Find(v => v.GetVertexRect(side).Contains(e.Location));
+                var vertex = vertices.Find(v => v.GetVertexRect(Side).Contains(e.Location));
                 lastPoint = vertex != null ? vertex.Location : Point.Empty;
-                lastVertexIndex = lastPoint.IsEmpty ? -1 : vertexes.FindIndex(v => v.Location.Equals(lastPoint));
+                lastVertexIndex = lastPoint.IsEmpty ? -1 : vertices.FindIndex(v => v.Location.Equals(lastPoint));
                 buttonPressed = e.Button == MouseButtons.Left;
+                contentChanged = false;
             }
         }
 
+        /// <summary>
+        /// Метод обработки перемещения курсора мыши на поверхности компонента
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (vertexes.Count > 0)
+            if (vertices.Count > 0)
             {
-                Cursor = vertexes.Any(vertex => vertex.GetVertexRect(side).Contains(e.Location)) ? Cursors.Hand : Cursors.Default;
+                // над наденой вершиной курсор превращается в руку
+                Cursor = vertices.Any(vertex => vertex.GetVertexRect(Side).Contains(e.Location)) ? Cursors.Hand : Cursors.Default;
                 if (buttonPressed)
                 {
                     // контроль границ для перемещения вершин
                     var rect = ClientRectangle;
-                    rect.Inflate(-side, -side);
-                    if (!lastPoint.IsEmpty && lastVertexIndex >= 0 && lastVertexIndex < vertexes.Count && rect.Contains(e.Location))
+                    rect.Inflate(-Side, -Side);
+                    if (!lastPoint.IsEmpty && lastVertexIndex >= 0 && lastVertexIndex < vertices.Count && rect.Contains(e.Location))
                     {
                         // перемещаем одну вершину
-                        vertexes[lastVertexIndex].Location = e.Location;
+                        vertices[lastVertexIndex].Location = e.Location;
                         BuildEdges();
+                        contentChanged = true;
                         Invalidate();
                     }
                 }
@@ -157,6 +144,12 @@ namespace Triangulation
         protected override void OnMouseUp(MouseEventArgs e)
         {
             buttonPressed = false;
+            if (contentChanged)
+            {
+                ContentUnsaved = true;
+                ContentChanged?.Invoke(this, new EventArgs());
+                contentChanged = false;
+            }
         }
 
         private Size size;
@@ -171,19 +164,25 @@ namespace Triangulation
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ViewUC_Resize(object sender, EventArgs e)
+        protected override void OnResize(EventArgs e)
+        {
+            if (ResizeContent())
+                Invalidate();
+        }
+
+        public bool ResizeContent()
         {
             var newSize = Size;
-            if (size.IsEmpty) return;
+            if (size.IsEmpty) return false;
             var kX = newSize.Width / (double)size.Width;
             var kY = newSize.Height / (double)size.Height;
-            foreach (var vertex in vertexes)
+            foreach (var vertex in vertices)
             {
                 vertex.X *= kX;
                 vertex.Y *= kY;
             }
             size = newSize;
-            Invalidate();
+            return true;
         }
 
         /// <summary>
@@ -194,7 +193,7 @@ namespace Triangulation
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
             Cursor = Cursors.Default;
-            var pointAboveVertex = vertexes.Any(vertex => vertex.GetVertexRect(side).Contains(PointToClient(MousePosition)));
+            var pointAboveVertex = vertices.Any(vertex => vertex.GetVertexRect(Side).Contains(PointToClient(MousePosition)));
             // пункт удаления вершины будет показан только над вершиной
             tsmiRemoveVertex.Visible = pointAboveVertex;
             // пункт добавления вершины будет показан вне вершины
@@ -210,13 +209,14 @@ namespace Triangulation
         {
             var point = PointToClient(contextMenu.Bounds.Location);
             var rect = ClientRectangle;
-            rect.Inflate(-side, -side);
+            rect.Inflate(-Side, -Side);
             if (rect.Contains(point))
             {
-                vertexes.Add(new Vertex(point));
-                vertexCount++;
+                vertices.Add(new Vertex(point));
                 BuildEdges();
                 Invalidate();
+                ContentUnsaved = true;
+                ContentChanged?.Invoke(this, new EventArgs());
             }
         }
 
@@ -228,17 +228,86 @@ namespace Triangulation
         private void tsmiRemoveVertex_Click(object sender, EventArgs e)
         {
             var point = PointToClient(contextMenu.Bounds.Location);
-            var vertex = vertexes.FirstOrDefault(v => v.GetVertexRect(side).Contains(point));
+            var vertex = vertices.FirstOrDefault(v => v.GetVertexRect(Side).Contains(point));
             if (vertex != null)
             {
                 // удаляем одну вершину
-                vertexes.Remove(vertex);
-                vertexCount--;
+                vertices.Remove(vertex);
                 BuildEdges();
                 Invalidate();
+                ContentUnsaved = true;
+                ContentChanged?.Invoke(this, new EventArgs());
             }
-
         }
 
+        /// <summary>
+        /// Генерация случайно расположенных вершин
+        /// </summary>
+        /// <param name="count"></param>
+        public void GenerateVertexList(int count)
+        {
+            vertices.Clear();
+            foreach (var vertex in Enumerable.Range(1, count).Select(n =>
+                     new Vertex(random.Next(Side, ClientSize.Width - Side), random.Next(Side, ClientSize.Height - Side))))
+            {
+                vertices.Add(vertex);
+            }
+            BuildEdges();
+            ContentUnsaved = true;
+            ContentChanged?.Invoke(this, new EventArgs());
+        }
+
+        public bool ContentUnsaved { get; private set; }
+
+        public void Clear()
+        {
+            vertices.Clear();
+            edges.Clear();
+            lastPoint = Point.Empty;
+            lastVertexIndex = -1;
+            ContentUnsaved = false;
+        }
+
+        public void LoadVertices(string fileName)
+        {
+            Clear();
+            try
+            {
+                try
+                {
+                    vertices.AddRange(SaverLoader.LoadVerticesFromFile(fileName, ClientSize));
+                    ResizeContent();
+                    BuildEdges();
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            finally
+            {
+                ContentUnsaved = false;
+            }
+        }
+
+        public void SaveVertices(string fileName)
+        {
+            if (!ContentUnsaved) return;
+            try
+            {
+                try
+                {
+                    SaverLoader.SaveVerticesToFile(fileName, vertices, ClientSize);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            finally
+            {
+                ContentUnsaved = false;
+            }
+        }
     }
 }

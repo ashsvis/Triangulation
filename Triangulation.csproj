@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Edge.cs" />
+    <Compile Include="SaverLoader.cs" />
     <Compile Include="Vertex.cs" />
     <Compile Include="ViewForm.cs">
       <SubType>Form</SubType>
